@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FINORIX PRO - Trading Software</title>
+  
+  <script src="https://cdn.tailwindcss.com/"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #0d0d12; 
+      color: white; 
+      margin: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* মেইন লেআউট */
+    .wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 50px;
+    }
+
+    /* অ্যাপ উইন্ডো - ডেস্কটপে বড়, মোবাইলে ফুল উইডথ */
+    .app-window { 
+      width: 450px; 
+      max-width: 100%;
+      background-color: #0f0f13; 
+      border: 1px solid #2d2d3a; 
+      border-radius: 20px; 
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    }
+
+    /* ভিডিও গ্রিড - মোবাইলে ১ কলাম, পিসিতে ৩ কলাম */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .video-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .video-card {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 15px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      width: 100%;
+    }
+    .video-card iframe { width: 100%; height: 100%; border: none; }
+
+    /* টেলিগ্রাম বাটন - মাঝখানে সাইডে */
+    .tg-side-btn {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #0088cc;
+      padding: 12px;
+      border-radius: 12px 0 0 12px;
+      box-shadow: -2px 0 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+      transition: 0.3s;
+    }
+    .tg-side-btn:hover { padding-right: 20px; }
+
+    /* মার্কেট লিস্ট */
+    .market-scroll { max-height: 400px; overflow-y: auto; text-align: left; }
+    .market-item { padding: 12px 15px; background: #16161d; margin-bottom: 6px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+    .market-item:hover { border-color: #22c55e; background: #1a1a24; }
+    .category-label { font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase; padding: 10px 5px; letter-spacing: 1px; }
+
+    /* মোডাল */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
+    .modal-content { background: #0a0a0c; border: 1px solid #333; border-radius: 20px; width: 450px; max-width: 100%; padding: 25px; text-align: center; max-height: 90vh; overflow-y: auto; }
+    
+    .hidden { display: none !important; }
+    .custom-input { background: #f0f4ff; color: #222; width: 100%; padding: 12px; border-radius: 10px; outline: none; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    
+    <!-- অ্যাপ উইন্ডো -->
+    <div id="main-app" class="app-window">
+      <div class="h-12 bg-[#16161d] flex items-center justify-between px-4 border-b border-gray-800">
+        <div class="flex space-x-2">
+            <div class="w-3 h-3 bg-[#ff5f56] rounded-full"></div>
+            <div class="w-3 h-3 bg-[#ffbd2e] rounded-full"></div>
+            <div class="w-3 h-3 bg-[#27c93f] rounded-full"></div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Deactivated</span>
+        </div>
+      </div>
+
+      <div class="p-5 md:p-8 space-y-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold italic">FINORIX PRO</h1>
+                <p class="text-red-500 text-[10px] font-bold uppercase">Premium Software</p>
+            </div>
+            <button onclick="showModal('order-modal')" class="bg-green-600 hover:bg-green-700 text-white text-xs px-5 py-2 rounded-lg font-bold transition-all">BUY LICENSE</button>
+        </div>
+
+        <div onclick="showModal('market-modal')" class="bg-[#16161d] p-4 rounded-xl border border-gray-800 cursor-pointer flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="https://i.postimg.cc/wBpbHLKR/Whats-App-Image-2025-11-18-at-11-22-29-c33d0e8d.jpg" class="w-10 h-10 rounded">
+                <span id="current-pair" class="font-bold text-sm">GBP/USD (OTC) ▾</span>
+            </div>
+            <div class="w-10 h-5 bg-green-500 rounded-full relative"><div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"></div></div>
+        </div>
+
+        <div class="relative h-[200px] md:h-[250px] bg-black rounded-xl overflow-hidden border border-gray-800 flex items-center justify-center">
+            <div class="z-20 text-center">
+                <div class="w-10 h-10 border-4 border-gray-700 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-[10px] uppercase font-bold text-gray-400 tracking-[3px]">Awaiting Activation</p>
+            </div>
+            <img src="market.png" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm">
+        </div>
+
+        <div class="flex justify-around items-center pt-4 opacity-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2"/></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-width="2"/></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke-width="2"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ভিডিও গ্রিড -->
+    <div class="video-grid">
+      <div class="video-card"><iframe src="https://www.youtube.com/embed/2OXyzDgbhZA"></iframe></div>
+      <div class="video-card"><iframe src="https://www.youtube.com/embed/P4AKxu_tlJQ"></iframe></div>
+      <div class="video-card"><iframe src="https://www.youtube.com/embed/VsyqoEfn-KE"></iframe></div>
+    </div>
+
+  </div>
+
+  <!-- টেলিগ্রাম সাইড বাটন -->
+  <a href="https://t.me/finorix_trade" target="_blank" class="tg-side-btn">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161l-1.895 8.936c-.143.64-.522.797-1.058.497l-2.89-2.13-1.394 1.34c-.154.154-.284.284-.582.284l.207-2.937 5.35-4.832c.232-.207-.051-.322-.36-.115L8.33 13.518l-2.852-.892c-.62-.193-.631-.62.13-.916l11.133-4.291c.515-.193.965.115.821.742z"/></svg>
+  </a>
+
+  <!-- মার্কেট সিলেকশন মোডাল -->
+  <div id="market-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4">Select Market</h2>
+        <div class="market-scroll">
+            <div class="category-label">OTC Markets (25)</div>
+            <div class="market-item" onclick="setPair('EUR/USD (OTC)')">EUR/USD (OTC)</div>
+            <div class="market-item" onclick="setPair('GBP/USD (OTC)')">GBP/USD (OTC)</div>
+            <div class="market-item" onclick="setPair('USD/JPY (OTC)')">USD/JPY (OTC)</div>
+            <div class="market-item" onclick="setPair('AUD/CAD (OTC)')">AUD/CAD (OTC)</div>
+            <div class="market-item" onclick="setPair('USD/BRL (OTC)')">USD/BRL (OTC)</div>
+            <!-- এভাবে ২৫টি ওটিসি পেয়ার যোগ করুন -->
+
+            <div class="category-label">Real Markets (25)</div>
+            <div class="market-item" onclick="setPair('EUR/USD')">EUR/USD</div>
+            <div class="market-item" onclick="setPair('GBP/USD')">GBP/USD</div>
+            <div class="market-item" onclick="setPair('XAU/USD (Gold)')">XAU/USD (Gold)</div>
+            <div class="market-item" onclick="setPair('BTC/USD')">BTC/USD (Crypto)</div>
+            <div class="market-item" onclick="setPair('ETH/USD')">ETH/USD</div>
+            <!-- এভাবে ২৫টি রিয়েল পেয়ার যোগ করুন -->
+        </div>
+        <button onclick="closeModal()" class="mt-4 text-gray-500 text-sm font-bold">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- পেমেন্ট/অর্ডার মোডাল -->
+  <div id="order-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4">License Purchase</h2>
+        <form class="space-y-3" onsubmit="event.preventDefault(); alert('Request Sent!'); closeModal();">
+            <input type="text" placeholder="Full Name" class="custom-input" required>
+            <select id="pay-method" class="custom-input" onchange="updatePayInfo(this.value)" required>
+                <option value="">Select Method</option>
+                <option value="TRC20">USDT (TRC20)</option>
+                <option value="BEP20">USDT (BEP20)</option>
+                <option value="BKASH">Bkash Personal</option>
+            </select>
+            <div id="pay-details" class="bg-black/50 p-4 rounded-xl border border-gray-800 hidden">
+                <div id="qr-box" class="mb-3 flex justify-center"></div>
+                <p id="addr-text" class="text-[11px] font-mono text-cyan-400 break-all mb-2"></p>
+                <button type="button" onclick="copyAddr()" class="bg-gray-700 text-white text-[10px] px-3 py-1 rounded">COPY ADDRESS</button>
+            </div>
+            <input type="file" class="custom-input" required>
+            <div class="text-green-500 font-bold">$50 / 6500 TK</div>
+            <button class="w-full bg-blue-600 py-3 rounded-lg font-bold">SUBMIT PAYMENT</button>
+            <button type="button" onclick="closeModal()" class="text-gray-500 text-xs">CANCEL</button>
+        </form>
+    </div>
+  </div>
+
+  <script>
+    const payments = {
+        'TRC20': { addr: 'TB9jgrjNmKuM1xvBb9p6ck21Texksxa88a', qr: 'trc20.png' },
+        'BEP20': { addr: '0x3e0fb69463e7ef658985271df03cf340e0d1bdd7', qr: 'bep20.png' },
+        'BKASH': { addr: '01772100217', qr: 'bkash.png' }
+    };
+
+    function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); }
+
+    function setPair(name) {
+        document.getElementById('current-pair').innerText = name + " ▾";
+        closeModal();
+    }
+
+    function updatePayInfo(val) {
+        const box = document.getElementById('pay-details');
+        if(!val) { box.classList.add('hidden'); return; }
+        box.classList.remove('hidden');
+        document.getElementById('addr-text').innerText = payments[val].addr;
+        document.getElementById('qr-box').innerHTML = `<img src="${payments[val].qr}" class="w-32 h-32 bg-white p-1 rounded-lg">`;
+    }
+
+    function copyAddr() {
+        const text = document.getElementById('addr-text').innerText;
+        navigator.clipboard.writeText(text);
+        alert("Copied!");
+    }
+  </script>
+</body>
+</html>
